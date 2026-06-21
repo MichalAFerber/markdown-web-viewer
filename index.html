@@ -416,13 +416,23 @@
     themeColor.setAttribute("content", hex);
   }
 
-  var saved = getCookie("mykk-bg");
-  if (!/^#([0-9a-f]{6})$/i.test(saved || "")) saved = "#ffffff";
+  function isHex6(v){ return /^#([0-9a-f]{6})$/i.test(v || ""); }
+  function saveColor(val){
+    setCookie("mykk-bg", val);                                  // primary
+    try { localStorage.setItem("mykk-bg", val); } catch (e) {}  // fallback (e.g. file://)
+  }
+  function loadColor(){
+    var v = getCookie("mykk-bg");
+    if (!isHex6(v)) { try { v = localStorage.getItem("mykk-bg"); } catch (e) { v = null; } }
+    return isHex6(v) ? v : "#ffffff";
+  }
+
+  var saved = loadColor();
   bgPicker.value = saved;
   applyColor(saved);
   bgPicker.addEventListener("input", function(){
     applyColor(bgPicker.value);
-    setCookie("mykk-bg", bgPicker.value);
+    saveColor(bgPicker.value);
   });
 
   // ---------- Drag & drop (anywhere) ----------

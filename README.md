@@ -20,7 +20,9 @@ runs locally in your browser.
 - 🗑️ **Clear** — empties the view.
 - 🎨 **Pick any background color** — a color swatch in the header lets you choose
   any background. Text, borders, and code blocks automatically adapt for
-  contrast. Your choice is **remembered in a cookie**. Starts on white.
+  contrast. Your choice is **remembered** — saved to a cookie, with a
+  `localStorage` fallback so even a downloaded `file://` copy remembers it.
+  Starts on white.
 - 🫥 **Distraction-free** — once a file is loaded the header slides away; move
   your mouse to the **top of the window** (or tap the top edge on mobile) to
   bring it back.
@@ -79,7 +81,8 @@ retained) so the page has **zero network dependencies**.
 
 100% client-side. Files you open are read in the browser and never uploaded
 anywhere. No analytics, no tracking. The only thing stored is your chosen
-background color, kept in a cookie so the app remembers it next time.
+background color, saved in a cookie (with a `localStorage` fallback) so the app
+remembers it next time — even a downloaded `file://` copy.
 
 ## License
 
