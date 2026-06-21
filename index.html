@@ -1,35 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff" id="themeColor">
-<meta name="description" content="MyKK Markdown Viewer — a fast, mobile-first, single-file Markdown viewer. Drag & drop any text file to render it.">
+<meta name="description" content="A fast, single-file Markdown viewer. Drag & drop any text file to render it.">
 <title>MyKK Markdown Viewer</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234f46e5'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='17' font-weight='bold' text-anchor='middle' fill='white'%3EM%E2%86%93%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20640%20512'%3E%3Cpath%20fill%3D'%234f46e5'%20d%3D'M593.8%2059.1H46.2C20.7%2059.1%200%2079.8%200%20105.2v301.5c0%2025.5%2020.7%2046.2%2046.2%2046.2h547.7c25.5%200%2046.2-20.7%2046.1-46.1V105.2c0-25.4-20.7-46.1-46.2-46.1zM338.5%20360.6H277v-120l-61.5%2076.9-61.5-76.9v120H92.3V151.4h61.5l61.5%2076.9%2061.5-76.9h61.5v209.2zm135.3%203.1L381.5%20256H443V151.4h61.5V256H566z'%2F%3E%3C%2Fsvg%3E">
 <style>
   :root{
-    --bg:#ffffff; --surface:#ffffff; --header-bg:rgba(255,255,255,.85);
+    --bg:#ffffff; --surface:#ffffff; --header-bg:rgba(255,255,255,.9);
     --text:#1f2328; --muted:#656d76; --border:#d0d7de; --border-soft:#e5e7eb;
     --accent:#4f46e5; --accent-contrast:#ffffff;
     --code-bg:#f6f8fa; --code-text:#1f2328; --hover:#f3f4f6;
-    --quote-border:#d0d7de; --overlay:rgba(79,70,229,.10); --shadow:rgba(0,0,0,.08);
+    --quote-border:#d0d7de; --overlay:rgba(79,70,229,.10); --shadow:rgba(0,0,0,.12);
     --table-stripe:#f6f8fa;
-  }
-  [data-theme="dark"]{
-    --bg:#0d1117; --surface:#0d1117; --header-bg:rgba(13,17,23,.85);
-    --text:#e6edf3; --muted:#8b949e; --border:#30363d; --border-soft:#21262d;
-    --accent:#7c83ff; --accent-contrast:#0d1117;
-    --code-bg:#161b22; --code-text:#e6edf3; --hover:#1b212a;
-    --quote-border:#30363d; --overlay:rgba(124,131,255,.12); --shadow:rgba(0,0,0,.5);
-    --table-stripe:#161b22;
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;padding:0;background:var(--bg)}
   body{
-    background:var(--bg); color:var(--text);
+    color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
     -webkit-font-smoothing:antialiased; line-height:1.55;
     min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;
@@ -47,38 +39,51 @@
     -webkit-backdrop-filter:saturate(180%) blur(10px);
     border-bottom:1px solid var(--border-soft);
   }
-  .brand{
-    margin:0; flex:1 1 auto; min-width:0;
-    display:flex; align-items:center; gap:.45rem;
-    font-size:clamp(.9rem,3.3vw,1.2rem); font-weight:700; letter-spacing:-.015em;
-    white-space:nowrap; overflow:hidden;
+  .doc-title{
+    flex:1 1 auto; min-width:0;
+    font-size:clamp(.9rem,3.3vw,1.1rem); font-weight:600; letter-spacing:-.01em;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text);
   }
-  .brand-text{overflow:hidden; text-overflow:ellipsis}
-  .brand-mark{
-    flex:0 0 auto; display:inline-grid; place-items:center;
-    width:1.6em; height:1.6em; border-radius:7px;
-    background:var(--accent); color:var(--accent-contrast);
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.7em; font-weight:800;
-  }
-  .actions{flex:0 0 auto; display:flex; align-items:center; gap:.05rem}
+  .doc-title:empty::before{content:"";}
+  .actions{flex:0 0 auto; display:flex; align-items:center; gap:.1rem}
   .iconbtn{
     display:inline-grid; place-items:center;
     width:40px; height:40px; padding:0;
     background:transparent; color:var(--text); border:0; border-radius:9px;
     cursor:pointer; -webkit-tap-highlight-color:transparent;
-    transition:background .15s ease, color .15s ease, transform .1s ease;
+    transition:background .15s ease, transform .1s ease;
   }
   .iconbtn:hover{background:var(--hover)}
   .iconbtn:active{transform:scale(.92)}
   .iconbtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
   .iconbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
-  .icon-sun{display:none}
-  [data-theme="dark"] .icon-sun{display:block}
-  [data-theme="dark"] .icon-moon{display:none}
+
+  /* Color swatch / picker (native input styled as a round-ish swatch) */
+  .swatch{
+    width:40px; height:40px; padding:0; margin:0;
+    border:0; border-radius:9px; background:transparent; cursor:pointer;
+    -webkit-appearance:none; appearance:none; -webkit-tap-highlight-color:transparent;
+  }
+  .swatch:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .swatch::-webkit-color-swatch-wrapper{padding:7px}
+  .swatch::-webkit-color-swatch{border:1px solid var(--border); border-radius:50%}
+  .swatch::-moz-color-swatch{border:1px solid var(--border); border-radius:50%}
+
+  /* ---------- Auto-hiding header while viewing ---------- */
+  .hover-zone{display:none}
+  body.viewing .hover-zone{display:block; position:fixed; top:0; left:0; right:0; height:22px; z-index:35}
+  body.viewing .topbar{
+    position:fixed; top:0; left:0; right:0; z-index:36;
+    transform:translateY(-115%); transition:transform .28s ease;
+  }
+  body.viewing.peek .topbar{transform:translateY(0); box-shadow:0 6px 22px var(--shadow)}
+  @media (hover:hover){
+    body.viewing .hover-zone:hover ~ .topbar,
+    body.viewing .topbar:hover{transform:translateY(0); box-shadow:0 6px 22px var(--shadow)}
+  }
 
   /* ---------- Main ---------- */
   main{flex:1 1 auto; width:100%; display:flex; flex-direction:column}
-
   .empty{
     flex:1 1 auto; display:flex; align-items:center; justify-content:center;
     text-align:center; padding:2rem 1.25rem; cursor:pointer; color:var(--muted);
@@ -93,18 +98,17 @@
   .empty-title{margin:0;font-size:1.1rem;font-weight:650;color:var(--text)}
   .empty-sub{margin:0;font-size:.9rem}
 
-  .markdown-body{
-    width:100%; max-width:54rem; margin:0 auto;
-    padding:1.25rem 1.1rem 2.5rem;
-  }
+  .markdown-body{width:100%; max-width:54rem; margin:0 auto; padding:1.25rem 1.1rem 2.5rem}
 
   /* ---------- Footer ---------- */
   .footer{
     border-top:1px solid var(--border-soft);
     padding:.85rem 1rem; padding-bottom:calc(.85rem + env(safe-area-inset-bottom));
-    text-align:center; color:var(--muted); font-size:.78rem; line-height:1.5;
+    text-align:center; color:var(--muted); font-size:.8rem; line-height:1.5;
   }
   .footer p{margin:0}
+  .footer a{color:var(--muted); text-decoration:underline; text-underline-offset:2px}
+  .footer a:hover{color:var(--accent)}
 
   /* ---------- Drop overlay ---------- */
   .drop-overlay{
@@ -192,8 +196,10 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
+<div class="hover-zone" id="hoverZone" aria-hidden="true"></div>
+
 <header class="topbar">
-  <h1 class="brand"><span class="brand-mark">M&#8595;</span><span class="brand-text">MyKK Markdown Viewer</span></h1>
+  <span class="doc-title" id="docTitle"></span>
   <nav class="actions" aria-label="Actions">
     <button id="btnNew" class="iconbtn" type="button" title="New — clear &amp; open a file" aria-label="New: clear and open a file">
       <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -204,10 +210,7 @@
     <button id="btnClear" class="iconbtn" type="button" title="Clear" aria-label="Clear the view">
       <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
     </button>
-    <button id="btnTheme" class="iconbtn" type="button" title="Toggle light / dark" aria-label="Toggle light and dark mode">
-      <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-      <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2v2.4M12 19.6V22M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2 12h2.4M19.6 12H22M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path></svg>
-    </button>
+    <input id="bgPicker" class="swatch" type="color" value="#ffffff" title="Background color" aria-label="Pick background color">
   </nav>
 </header>
 
@@ -223,7 +226,7 @@
 </main>
 
 <footer class="footer">
-  <p>&copy; 2026 | Created with &#10084;&#65039; by Michal Ferber, aka TechGuyWithABeard | Build <span id="buildTime">local</span> EST</p>
+  <p>&copy; 2026 | Created with &#10084;&#65039; by <a href="https://michalferber.dev" target="_blank" rel="noopener noreferrer">Michal Ferber</a>, aka <a href="https://techguywithabeard.com" target="_blank" rel="noopener noreferrer">TechGuyWithABeard</a></p>
 </footer>
 
 <div id="dropOverlay" class="drop-overlay" aria-hidden="true">
@@ -252,14 +255,19 @@
 <script>
 (function(){
   "use strict";
-  var doc = document;
+  var doc = document, root = doc.documentElement, body = doc.body;
   var content   = doc.getElementById("content");
   var empty     = doc.getElementById("empty");
   var fileInput = doc.getElementById("fileInput");
   var overlay   = doc.getElementById("dropOverlay");
   var toastEl   = doc.getElementById("toast");
+  var docTitle  = doc.getElementById("docTitle");
+  var hoverZone = doc.getElementById("hoverZone");
+  var bgPicker  = doc.getElementById("bgPicker");
+  var themeColor= doc.getElementById("themeColor");
   var rawText   = "";
   var toastTimer = null;
+  var BASE_TITLE = "MyKK Markdown Viewer";
 
   if (window.marked && typeof marked.setOptions === "function") {
     marked.setOptions({ gfm: true, breaks: false });
@@ -272,7 +280,7 @@
     toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 1900);
   }
 
-  function render(text){
+  function render(text, title){
     rawText = text;
     var html = window.marked ? marked.parse(text) : text;
     if (window.DOMPurify) html = DOMPurify.sanitize(html, { ADD_ATTR: ["target"] });
@@ -284,6 +292,10 @@
     }
     content.hidden = false;
     empty.hidden = true;
+    docTitle.textContent = title || "";
+    doc.title = title ? title + " — " + BASE_TITLE : BASE_TITLE;
+    body.classList.add("viewing");
+    body.classList.remove("peek");
     window.scrollTo(0, 0);
   }
 
@@ -292,12 +304,15 @@
     content.innerHTML = "";
     content.hidden = true;
     empty.hidden = false;
+    docTitle.textContent = "";
+    doc.title = BASE_TITLE;
+    body.classList.remove("viewing", "peek");
   }
 
   function readFile(file){
     if (!file) return;
     var reader = new FileReader();
-    reader.onload  = function(e){ render(String(e.target.result || "")); };
+    reader.onload  = function(e){ render(String(e.target.result || ""), file.name); };
     reader.onerror = function(){ toast("Could not read that file"); };
     reader.readAsText(file);
   }
@@ -331,12 +346,9 @@
 
   function fallbackCopy(text){
     var ta = doc.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "");
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    doc.body.appendChild(ta);
-    ta.select();
+    ta.value = text; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0";
+    doc.body.appendChild(ta); ta.select();
     try { doc.execCommand("copy"); toast("Markdown copied"); }
     catch (err){ toast("Copy not supported"); }
     doc.body.removeChild(ta);
@@ -350,22 +362,77 @@
     if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openDialog(); }
   });
 
-  // ---------- Theme ----------
-  var root = doc.documentElement;
-  var themeColor = doc.getElementById("themeColor");
-  var STORE = "mykk-md-theme";
-  function applyTheme(t){
-    root.setAttribute("data-theme", t);
-    themeColor.setAttribute("content", t === "dark" ? "#0d1117" : "#ffffff");
+  // Reveal/peek the hidden header by tapping the top strip (touch); desktop uses CSS :hover.
+  hoverZone.addEventListener("click", function(){ body.classList.toggle("peek"); });
+  content.addEventListener("click", function(){ body.classList.remove("peek"); });
+
+  // ---------- Background color (chosen by the user, remembered in a cookie) ----------
+  function setCookie(name, val){
+    doc.cookie = name + "=" + encodeURIComponent(val) + "; max-age=31536000; path=/; SameSite=Lax";
   }
-  var saved = null;
-  try { saved = localStorage.getItem(STORE); } catch(e){}
-  var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  applyTheme(saved || (prefersDark ? "dark" : "light"));
-  doc.getElementById("btnTheme").addEventListener("click", function(){
-    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    applyTheme(next);
-    try { localStorage.setItem(STORE, next); } catch(e){}
+  function getCookie(name){
+    var m = doc.cookie.match("(?:^|; )" + name.replace(/([.*+?^${}()|[\]\\])/g, "\\$1") + "=([^;]*)");
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function hexToRgb(h){
+    h = h.replace("#", "");
+    if (h.length === 3) h = h.charAt(0)+h.charAt(0)+h.charAt(1)+h.charAt(1)+h.charAt(2)+h.charAt(2);
+    var n = parseInt(h, 16);
+    return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+  }
+  function srgb(c){ c/=255; return c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+  function luminance(rgb){ return 0.2126*srgb(rgb.r) + 0.7152*srgb(rgb.g) + 0.0722*srgb(rgb.b); }
+  function mix(a, b, t){
+    return "rgb(" + Math.round(a.r+(b.r-a.r)*t) + "," + Math.round(a.g+(b.g-a.g)*t) + "," + Math.round(a.b+(b.b-a.b)*t) + ")";
+  }
+  function rgbStr(c){ return "rgb(" + c.r + "," + c.g + "," + c.b + ")"; }
+
+  function applyColor(hex){
+    if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) hex = "#ffffff";
+    var bg = hexToRgb(hex);
+    // Pick black or white text by whichever contrasts better (crossover ~0.179).
+    var lightText = luminance(bg) <= 0.179;          // dark background -> light text
+    var text = lightText ? { r:240, g:243, b:246 } : { r:31, g:35, b:40 };
+    var accentHex = lightText ? "#8b93ff" : "#4f46e5";
+    var ac = hexToRgb(accentHex);
+    var s = root.style;
+    s.setProperty("--bg", hex);
+    s.setProperty("--surface", hex);
+    s.setProperty("--text", rgbStr(text));
+    s.setProperty("--code-text", rgbStr(text));
+    s.setProperty("--muted", mix(bg, text, 0.45));
+    s.setProperty("--border", mix(bg, text, 0.24));
+    s.setProperty("--border-soft", mix(bg, text, 0.13));
+    s.setProperty("--code-bg", mix(bg, text, 0.07));
+    s.setProperty("--hover", mix(bg, text, 0.10));
+    s.setProperty("--table-stripe", mix(bg, text, 0.05));
+    s.setProperty("--quote-border", mix(bg, text, 0.26));
+    s.setProperty("--accent", accentHex);
+    s.setProperty("--accent-contrast", lightText ? "#0d1117" : "#ffffff");
+    s.setProperty("--overlay", "rgba(" + ac.r + "," + ac.g + "," + ac.b + ",0.12)");
+    s.setProperty("--shadow", lightText ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.12)");
+    s.setProperty("--header-bg", "rgba(" + bg.r + "," + bg.g + "," + bg.b + ",0.9)");
+    s.colorScheme = lightText ? "dark" : "light";
+    themeColor.setAttribute("content", hex);
+  }
+
+  function isHex6(v){ return /^#([0-9a-f]{6})$/i.test(v || ""); }
+  function saveColor(val){
+    setCookie("mykk-bg", val);                                  // primary
+    try { localStorage.setItem("mykk-bg", val); } catch (e) {}  // fallback (e.g. file://)
+  }
+  function loadColor(){
+    var v = getCookie("mykk-bg");
+    if (!isHex6(v)) { try { v = localStorage.getItem("mykk-bg"); } catch (e) { v = null; } }
+    return isHex6(v) ? v : "#ffffff";
+  }
+
+  var saved = loadColor();
+  bgPicker.value = saved;
+  applyColor(saved);
+  bgPicker.addEventListener("input", function(){
+    applyColor(bgPicker.value);
+    saveColor(bgPicker.value);
   });
 
   // ---------- Drag & drop (anywhere) ----------
@@ -387,7 +454,7 @@
     var dt = e.dataTransfer; if (!dt) return;
     if (dt.files && dt.files.length){ readFile(dt.files[0]); return; }
     var txt = dt.getData && dt.getData("text");
-    if (txt) render(txt);
+    if (txt) render(txt, "");
   });
 
   // ---------- Paste to view ----------
@@ -396,13 +463,8 @@
     if (!cd) return;
     if (cd.files && cd.files.length){ e.preventDefault(); readFile(cd.files[0]); return; }
     var txt = cd.getData && cd.getData("text");
-    if (txt){ e.preventDefault(); render(txt); }
+    if (txt){ e.preventDefault(); render(txt, ""); }
   });
-
-  // ---------- Build stamp ----------
-  var BUILD_TIME = "__BUILD_TIME__";
-  var bt = doc.getElementById("buildTime");
-  if (bt) bt.textContent = BUILD_TIME.lastIndexOf("__BUILD", 0) === 0 ? "local" : BUILD_TIME;
 })();
 </script>
 </body>

@@ -7,81 +7,82 @@ runs locally in your browser.
 
 🔗 **Live:** <https://md.mykk.us/>
 
-![Light and dark mode](https://img.shields.io/badge/theme-light%20%2B%20dark-4f46e5) ![Single file](https://img.shields.io/badge/build-single%20HTML%20file-success) ![License](https://img.shields.io/badge/license-MIT-blue)
+![Single file](https://img.shields.io/badge/build-single%20HTML%20file-success) ![No build step](https://img.shields.io/badge/build%20step-none-success) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Features
 
 - 📄 **Drag & drop anywhere** — drop a `.md`, `.txt`, `.json`, `.yaml`, or any
-  text file on the body to render it. You can also **paste** text directly.
-- ➕ **New** (top-right `+`) — clears the screen and opens a file picker.
+  text file on the page to render it. You can also **paste** text directly.
+- 🏷️ **Filename in the header** — when you open or drop a file, its name shows
+  in the top-left.
+- ➕ **New** (`+`) — clears the screen and opens a file picker.
 - 📋 **Copy** — copies the raw Markdown source to your clipboard.
 - 🗑️ **Clear** — empties the view.
-- 🌗 **Light / dark toggle** — remembers your choice; defaults to your system theme.
+- 🎨 **Pick any background color** — a color swatch in the header lets you choose
+  any background. Text, borders, and code blocks automatically adapt for
+  contrast. Your choice is **remembered** — saved to a cookie, with a
+  `localStorage` fallback so even a downloaded `file://` copy remembers it.
+  Starts on white.
+- 🫥 **Distraction-free** — once a file is loaded the header slides away; move
+  your mouse to the **top of the window** (or tap the top edge on mobile) to
+  bring it back.
 - 📱 **Mobile-first** & responsive, with safe-area support for notched phones.
 - 🔒 **Safe by default** — output is sanitized with DOMPurify, so a malicious
   file can't run scripts. Nothing ever leaves your device.
 - 🪶 **One file, no build, no CDN** — `index.html` is fully self-contained
-  (~75 KB) and works offline, even straight from `file://`.
+  (~78 KB) and works offline, even straight from `file://`.
 
 ## Quick start
 
 **Just open it.** Download [`index.html`](index.html), double-click it, and
-you're done — it runs locally with no server and no internet connection.
+you're done — it runs locally with no server, no build, and no internet
+connection.
 
 Prefer a local server?
 
 ```sh
-# Python (built-in)
-python3 -m http.server 8080
-# then open http://localhost:8080
+python3 -m http.server 8080   # then open http://localhost:8080
 ```
 
-## Run with Docker
-
-```sh
-docker build -t mykk-markdown-viewer .
-docker run --rm -p 8080:80 mykk-markdown-viewer
-# open http://localhost:8080
-```
+Any static web server works too — there is nothing to build.
 
 ## Deploy to Cloudflare Pages (auto-deploy from this repo)
 
 Connect the repository in the Cloudflare dashboard
 (**Workers & Pages → Create → Pages → Connect to Git**) and use:
 
-| Setting                  | Value          |
-| ------------------------ | -------------- |
-| Framework preset         | `None`         |
-| Build command            | `sh build.sh`  |
-| Build output directory   | `dist`         |
+| Setting                  | Value            |
+| ------------------------ | ---------------- |
+| Production branch        | `main`           |
+| Framework preset         | `None`           |
+| Build command            | *(leave blank)*  |
+| Build output directory   | `/`              |
 
-`build.sh` simply stamps the current Eastern-time build date into the footer
-and copies the app into `dist/`. Every push to your production branch then
+It's a static site — Cloudflare just serves `index.html`. The included
+[`_headers`](_headers) file applies security headers (CSP, `nosniff`,
+`frame-ancestors`, etc.) automatically. Every push to `main` then
 auto-deploys.
 
-> Don't want a build step? You can point Pages at the repo root with no build
-> command — the app still works, but the footer will show `Build local EST`
-> instead of a real timestamp.
-
-Then add your custom domain `md.mykk.us` under the project's **Custom domains** tab.
+Add your custom domain `md.mykk.us` under the project's **Custom domains** tab —
+Cloudflare creates the DNS record and provisions SSL for you.
 
 ## How it works
 
 Everything is in [`index.html`](index.html):
 
-- Your HTML/CSS/UI and the app logic.
+- Your HTML/CSS/UI and the app logic — no build step, no tooling.
 - [**marked**](https://github.com/markedjs/marked) `v12.0.2` (MIT) for Markdown → HTML, with GitHub-Flavored Markdown (tables, task lists, strikethrough, fenced code).
 - [**DOMPurify**](https://github.com/cure53/DOMPurify) `v3.1.6` for sanitizing the rendered HTML.
 
 Both libraries are embedded inline (minified, with their license banners
-retained) so the page has **zero network dependencies**. The only build-time
-substitution is the `__BUILD_TIME__` token used for the footer.
+retained) so the page has **zero network dependencies**.
 
 ## Privacy
 
 100% client-side. Files you open are read in the browser and never uploaded
-anywhere. No analytics, no cookies, no tracking. The only thing stored is your
-light/dark preference in `localStorage`.
+anywhere. No analytics, no tracking. The only thing stored is your chosen
+background color, saved in a cookie (with a `localStorage` fallback) so the app
+remembers it next time — even a downloaded `file://` copy.
 
 ## License
 
