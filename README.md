@@ -28,9 +28,11 @@ runs locally in your browser.
   bring it back.
 - 📱 **Mobile-first** & responsive, with safe-area support for notched phones.
 - 🔒 **Safe by default** — output is sanitized with DOMPurify, so a malicious
-  file can't run scripts. Nothing ever leaves your device.
-- 🪶 **One file, no build, no CDN** — `index.html` is fully self-contained
-  (~78 KB) and works offline, even straight from `file://`.
+  file can't run scripts. Your files never leave your device.
+- 🪶 **One file, no build** — `index.html` is self-contained (~78 KB) and the
+  viewer works offline, even straight from `file://`.
+- 📊 **Privacy-friendly analytics** — the hosted site uses a self-hosted,
+  cookieless [Plausible](https://plausible.io/) instance (see [Privacy](#privacy)).
 
 ## Quick start
 
@@ -75,14 +77,23 @@ Everything is in [`index.html`](index.html):
 - [**DOMPurify**](https://github.com/cure53/DOMPurify) `v3.1.6` for sanitizing the rendered HTML.
 
 Both libraries are embedded inline (minified, with their license banners
-retained) so the page has **zero network dependencies**.
+retained), so the viewer renders with **no network dependencies** and works
+fully offline. The only external request is the analytics script on the hosted
+site (see [Privacy](#privacy)).
 
 ## Privacy
 
-100% client-side. Files you open are read in the browser and never uploaded
-anywhere. No analytics, no tracking. The only thing stored is your chosen
-background color, saved in a cookie (with a `localStorage` fallback) so the app
-remembers it next time — even a downloaded `file://` copy.
+Your files stay on your device — they're read in the browser and never uploaded
+anywhere, and your content is never sent to any server.
+
+The hosted site at **md.mykk.us** uses a self-hosted
+[Plausible](https://plausible.io/) instance for **privacy-friendly, cookieless**
+page analytics: aggregate visit counts only — no personal data, no cross-site
+tracking, no advertising. Plausible automatically ignores `localhost` and
+`file://`, so a downloaded local copy reports nothing.
+
+The only thing stored on your device is your chosen background color (a cookie,
+with a `localStorage` fallback).
 
 ## License
 
