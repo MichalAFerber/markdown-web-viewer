@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff" id="themeColor">
 <meta name="description" content="A fast, single-file Markdown &amp; text viewer. Drag &amp; drop a file to render it.">
-<title>[epub, md, html, pdf, data] Viewer</title>
+<title>Markdown Viewer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20x%3D%222.5%22%20y%3D%227.955%22%20width%3D%2227%22%20height%3D%2216.091%22%20style%3D%22fill%3Anone%3Bstroke%3A%23755838%22%2F%3E%3Cpolygon%20points%3D%225.909%2020.636%205.909%2011.364%208.636%2011.364%2011.364%2014.773%2014.091%2011.364%2016.818%2011.364%2016.818%2020.636%2014.091%2020.636%2014.091%2015.318%2011.364%2018.727%208.636%2015.318%208.636%2020.636%205.909%2020.636%22%20style%3D%22fill%3A%23755838%22%2F%3E%3Cpolygon%20points%3D%2222.955%2020.636%2018.864%2016.136%2021.591%2016.136%2021.591%2011.364%2024.318%2011.364%2024.318%2016.136%2027.045%2016.136%2022.955%2020.636%22%20style%3D%22fill%3A%23755838%22%2F%3E%3C%2Fsvg%3E">
 <!-- Privacy-friendly, cookieless analytics (self-hosted Plausible) -->
 <script defer data-domain="markdown-viewer.us" src="https://plausible.thompsonblack.us/js/script.js"></script>
@@ -41,6 +41,9 @@
     -webkit-backdrop-filter:saturate(180%) blur(10px);
     border-bottom:1px solid var(--border-soft);
   }
+  .doc-id{flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:.45rem}
+  .doc-icon{flex:0 0 auto; display:inline-grid; place-items:center; width:24px; height:24px}
+  .doc-icon svg{width:22px; height:22px; display:block}
   .doc-title{
     flex:1 1 auto; min-width:0;
     font-size:clamp(.9rem,3.3vw,1.1rem); font-weight:600; letter-spacing:-.01em;
@@ -92,7 +95,7 @@
     box-shadow:0 6px 22px var(--shadow);
   }
   body.viewing.header-hidden .topbar{transform:translateY(-115%); box-shadow:none}
-  body.viewing main{padding-top:calc(var(--header-h) + env(safe-area-inset-top))}
+  /* content starts at the very top; the fixed header overlays it when shown (unobstructed first paint) */
 
   /* ---------- Main ---------- */
   main{flex:1 1 auto; width:100%; display:flex; flex-direction:column}
@@ -220,7 +223,10 @@
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="topbar">
-  <span class="doc-title" id="docTitle"></span>
+  <div class="doc-id">
+    <span class="doc-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="2.5" y="7.955" width="27" height="16.091" style="fill:none;stroke:#755838"/><polygon points="5.909 20.636 5.909 11.364 8.636 11.364 11.364 14.773 14.091 11.364 16.818 11.364 16.818 20.636 14.091 20.636 14.091 15.318 11.364 18.727 8.636 15.318 8.636 20.636 5.909 20.636" style="fill:#755838"/><polygon points="22.955 20.636 18.864 16.136 21.591 16.136 21.591 11.364 24.318 11.364 24.318 16.136 27.045 16.136 22.955 20.636" style="fill:#755838"/></svg></span>
+    <span class="doc-title" id="docTitle">Markdown Viewer</span>
+  </div>
   <nav class="actions" aria-label="Actions">
     <button id="btnCopy" class="iconbtn" type="button" data-tip="Copy source" aria-label="Copy source">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -291,9 +297,10 @@
   var bgPicker  = doc.getElementById("bgPicker");
   var themeColor= doc.getElementById("themeColor");
   var footerEl  = doc.getElementById("footer");
+  var topbar    = doc.querySelector(".topbar");
   var rawText   = "";
   var toastTimer = null;
-  var BASE_TITLE = "[epub, md, html, pdf, data] Viewer";
+  var BASE_TITLE = "Markdown Viewer";
 
   // Accepted Markdown-family file types (other file types are handled elsewhere).
   var MD_EXT = ["md", "markdown", "mdx", "txt", "rst", "adoc"];
@@ -323,12 +330,16 @@
     }
     content.hidden = false;
     empty.hidden = true;
-    docTitle.textContent = title || "";
+    docTitle.textContent = title || BASE_TITLE;
     doc.title = title ? title + " — " + BASE_TITLE : BASE_TITLE;
+    topbar.style.transition = "none";        // hide instantly -> unobstructed first paint
     body.classList.add("viewing");
-    body.classList.remove("header-hidden");
+    body.classList.add("header-hidden");
+    void topbar.offsetHeight;                // reflow so the hidden state paints with no slide
+    topbar.style.transition = "";
     lastY = 0;
     window.scrollTo(0, 0);
+    showHeaderSoon();                        // reveal after ~5s (or sooner on scroll-up)
   }
 
   function clearAll(){
@@ -336,9 +347,10 @@
     content.innerHTML = "";
     content.hidden = true;
     empty.hidden = false;
-    docTitle.textContent = "";
+    docTitle.textContent = BASE_TITLE;
     doc.title = BASE_TITLE;
     body.classList.remove("viewing", "header-hidden");
+    clearTimeout(headerTimer);
   }
 
   function readFile(file){
@@ -397,17 +409,16 @@
 
   // ---------- Header auto-hide: hide on scroll-down, show on scroll-up or after 5s ----------
   var lastY = 0, headerTimer = null, ticking = false;
+  function showHeaderSoon(){ clearTimeout(headerTimer); headerTimer = setTimeout(function(){ body.classList.remove("header-hidden"); }, 5000); }
   function onScroll(){
     ticking = false;
     if (!body.classList.contains("viewing")) return;
     var y = window.pageYOffset || root.scrollTop || 0;
-    if (y <= 8){ body.classList.remove("header-hidden"); lastY = y; return; }
     var dy = y - lastY;
+    lastY = y;
     if (dy > 4) body.classList.add("header-hidden");          // scrolling down
     else if (dy < -4) body.classList.remove("header-hidden"); // scrolling up
-    lastY = y;
-    clearTimeout(headerTimer);
-    headerTimer = setTimeout(function(){ body.classList.remove("header-hidden"); }, 5000);
+    showHeaderSoon();
   }
   window.addEventListener("scroll", function(){
     if (!ticking){ ticking = true; requestAnimationFrame(onScroll); }
