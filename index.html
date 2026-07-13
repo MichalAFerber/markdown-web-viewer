@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff" id="themeColor">
-<meta name="description" content="A fast, single-file Markdown viewer. Drag & drop any text file to render it.">
-<title>MyKK Markdown Viewer</title>
+<meta name="description" content="A fast, single-file Markdown &amp; text viewer. Drag &amp; drop a file to render it.">
+<title>[epub, md, html, pdf, data] Viewer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20x%3D%222.5%22%20y%3D%227.955%22%20width%3D%2227%22%20height%3D%2216.091%22%20style%3D%22fill%3Anone%3Bstroke%3A%23755838%22%2F%3E%3Cpolygon%20points%3D%225.909%2020.636%205.909%2011.364%208.636%2011.364%2011.364%2014.773%2014.091%2011.364%2016.818%2011.364%2016.818%2020.636%2014.091%2020.636%2014.091%2015.318%2011.364%2018.727%208.636%2015.318%208.636%2020.636%205.909%2020.636%22%20style%3D%22fill%3A%23755838%22%2F%3E%3Cpolygon%20points%3D%2222.955%2020.636%2018.864%2016.136%2021.591%2016.136%2021.591%2011.364%2024.318%2011.364%2024.318%2016.136%2027.045%2016.136%2022.955%2020.636%22%20style%3D%22fill%3A%23755838%22%2F%3E%3C%2Fsvg%3E">
 <!-- Privacy-friendly, cookieless analytics (self-hosted Plausible) -->
 <script defer data-domain="markdown-viewer.us" src="https://plausible.thompsonblack.us/js/script.js"></script>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20640%20512'%3E%3Cpath%20fill%3D'%234f46e5'%20d%3D'M593.8%2059.1H46.2C20.7%2059.1%200%2079.8%200%20105.2v301.5c0%2025.5%2020.7%2046.2%2046.2%2046.2h547.7c25.5%200%2046.2-20.7%2046.1-46.1V105.2c0-25.4-20.7-46.1-46.2-46.1zM338.5%20360.6H277v-120l-61.5%2076.9-61.5-76.9v120H92.3V151.4h61.5l61.5%2076.9%2061.5-76.9h61.5v209.2zm135.3%203.1L381.5%20256H443V151.4h61.5V256H566z'%2F%3E%3C%2Fsvg%3E">
 <style>
   :root{
     --bg:#ffffff; --surface:#ffffff; --header-bg:rgba(255,255,255,.9);
@@ -17,7 +17,7 @@
     --accent:#4f46e5; --accent-contrast:#ffffff;
     --code-bg:#f6f8fa; --code-text:#1f2328; --hover:#f3f4f6;
     --quote-border:#d0d7de; --overlay:rgba(79,70,229,.10); --shadow:rgba(0,0,0,.12);
-    --table-stripe:#f6f8fa;
+    --table-stripe:#f6f8fa; --header-h:58px;
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
@@ -46,7 +46,6 @@
     font-size:clamp(.9rem,3.3vw,1.1rem); font-weight:600; letter-spacing:-.01em;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text);
   }
-  .doc-title:empty::before{content:"";}
   .actions{flex:0 0 auto; display:flex; align-items:center; gap:.1rem}
   .iconbtn{
     display:inline-grid; place-items:center;
@@ -61,7 +60,8 @@
   .iconbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
   .iconbtn.iconbtn-gh svg{width:22px;height:22px;fill:currentColor;stroke:none}
 
-  /* Color swatch / picker (native input styled as a round-ish swatch) */
+  /* Color swatch / picker (native input styled as a round swatch) */
+  .tip-wrap{position:relative; display:inline-grid; place-items:center}
   .swatch{
     width:40px; height:40px; padding:0; margin:0;
     border:0; border-radius:9px; background:transparent; cursor:pointer;
@@ -72,61 +72,81 @@
   .swatch::-webkit-color-swatch{border:1px solid var(--border); border-radius:50%}
   .swatch::-moz-color-swatch{border:1px solid var(--border); border-radius:50%}
 
-  /* ---------- Auto-hiding header while viewing ---------- */
-  .hover-zone{display:none}
-  body.viewing .hover-zone{display:block; position:fixed; top:0; left:0; right:0; height:22px; z-index:35}
+  /* Fast custom tooltips (native title is too slow) */
+  [data-tip]{position:relative}
+  [data-tip]::after{
+    content:attr(data-tip);
+    position:absolute; top:calc(100% + 5px); left:50%; transform:translateX(-50%);
+    background:var(--text); color:var(--bg); font-size:.72rem; font-weight:550; line-height:1;
+    padding:.34rem .5rem; border-radius:6px; white-space:nowrap;
+    opacity:0; pointer-events:none; transition:opacity .1s ease .03s; z-index:45;
+    box-shadow:0 4px 14px var(--shadow);
+  }
+  [data-tip]:hover::after, [data-tip]:focus-visible::after,
+  .tip-wrap:has(:focus-visible)::after{opacity:1}
+
+  /* ---------- Header auto-hide on scroll (while viewing) ---------- */
   body.viewing .topbar{
     position:fixed; top:0; left:0; right:0; z-index:36;
-    transform:translateY(-115%); transition:transform .28s ease;
+    transition:transform .28s ease;
+    box-shadow:0 6px 22px var(--shadow);
   }
-  body.viewing.peek .topbar{transform:translateY(0); box-shadow:0 6px 22px var(--shadow)}
-  @media (hover:hover){
-    body.viewing .hover-zone:hover ~ .topbar,
-    body.viewing .topbar:hover{transform:translateY(0); box-shadow:0 6px 22px var(--shadow)}
-  }
+  body.viewing.header-hidden .topbar{transform:translateY(-115%); box-shadow:none}
+  body.viewing main{padding-top:calc(var(--header-h) + env(safe-area-inset-top))}
 
   /* ---------- Main ---------- */
   main{flex:1 1 auto; width:100%; display:flex; flex-direction:column}
-  .empty{
-    flex:1 1 auto; display:flex; align-items:center; justify-content:center;
-    text-align:center; padding:2rem 1.25rem; cursor:pointer; color:var(--muted);
-  }
+
+  /* Full-screen drop area (empty state) */
+  .empty{flex:1 1 auto; display:flex; padding:.75rem; cursor:pointer; color:var(--muted)}
   .empty-inner{
-    max-width:30rem; display:flex; flex-direction:column; align-items:center; gap:.35rem;
-    border:2px dashed var(--border); border-radius:16px; padding:2.25rem 1.5rem; width:100%;
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem;
+    border:2px dashed var(--border); border-radius:16px; text-align:center; padding:1.5rem;
     transition:border-color .15s ease, background .15s ease;
   }
   .empty:hover .empty-inner{border-color:var(--accent); background:var(--overlay)}
-  .empty svg{width:46px;height:46px;stroke:var(--accent);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:.4rem}
-  .empty-title{margin:0;font-size:1.1rem;font-weight:650;color:var(--text)}
-  .empty-sub{margin:0;font-size:.9rem}
+  .empty svg{width:54px;height:54px;stroke:var(--accent);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:.4rem}
+  .empty-title{margin:0;font-size:1.15rem;font-weight:650;color:var(--text)}
+  .empty-sub{margin:0;font-size:.9rem;max-width:24rem}
 
   .markdown-body{width:100%; max-width:54rem; margin:0 auto; padding:1.25rem 1.1rem 2.5rem}
 
   /* ---------- Footer ---------- */
   .footer{
+    position:relative;
     border-top:1px solid var(--border-soft);
-    padding:.85rem 1rem; padding-bottom:calc(.85rem + env(safe-area-inset-bottom));
+    padding:.85rem 2.6rem; padding-bottom:calc(.85rem + env(safe-area-inset-bottom));
     text-align:center; color:var(--muted); font-size:.8rem; line-height:1.5;
   }
   .footer p{margin:0}
   .footer a{color:var(--muted); text-decoration:underline; text-underline-offset:2px}
   .footer a:hover{color:var(--accent)}
+  .footer-close{
+    position:absolute; right:.4rem; top:50%; transform:translateY(-50%);
+    width:32px; height:32px; display:grid; place-items:center;
+    background:transparent; border:0; border-radius:8px; color:var(--muted); cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .footer-close:hover{background:var(--hover); color:var(--text)}
+  .footer-close:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .footer-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+  .footer-close[data-tip]::after{top:auto; bottom:calc(100% + 5px)}
 
-  /* ---------- Drop overlay ---------- */
+  /* ---------- Drag overlay ---------- */
   .drop-overlay{
     position:fixed; inset:0; z-index:50; display:none;
-    align-items:center; justify-content:center; padding:1.5rem;
+    align-items:center; justify-content:center; padding:1rem;
     background:var(--overlay); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
   }
   .drop-overlay.show{display:flex}
   .drop-card{
     display:flex; flex-direction:column; align-items:center; gap:.75rem;
-    padding:2.5rem 3rem; border:3px dashed var(--accent); border-radius:20px;
-    background:var(--surface); color:var(--accent); font-size:1.25rem; font-weight:650;
-    box-shadow:0 20px 50px var(--shadow); pointer-events:none;
+    width:100%; height:100%; justify-content:center;
+    border:3px dashed var(--accent); border-radius:20px;
+    color:var(--accent); font-size:1.35rem; font-weight:650;
+    background:var(--surface); box-shadow:0 20px 50px var(--shadow); pointer-events:none;
   }
-  .drop-card svg{width:54px;height:54px;stroke:var(--accent);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .drop-card svg{width:64px;height:64px;stroke:var(--accent);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
   /* ---------- Toast ---------- */
   .toast{
@@ -199,22 +219,19 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<div class="hover-zone" id="hoverZone" aria-hidden="true"></div>
-
 <header class="topbar">
   <span class="doc-title" id="docTitle"></span>
   <nav class="actions" aria-label="Actions">
-    <button id="btnNew" class="iconbtn" type="button" title="New — clear &amp; open a file" aria-label="New: clear and open a file">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-    </button>
-    <button id="btnCopy" class="iconbtn" type="button" title="Copy Markdown source" aria-label="Copy Markdown source">
+    <button id="btnCopy" class="iconbtn" type="button" data-tip="Copy source" aria-label="Copy source">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
     </button>
-    <button id="btnClear" class="iconbtn" type="button" title="Clear" aria-label="Clear the view">
+    <button id="btnClear" class="iconbtn" type="button" data-tip="Clear" aria-label="Clear the view">
       <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
     </button>
-    <input id="bgPicker" class="swatch" type="color" value="#ffffff" title="Background color" aria-label="Pick background color">
-    <a id="ghLink" class="iconbtn iconbtn-gh" href="https://github.com/MichalAFerber/markdown-web-viewer" target="_blank" rel="noopener noreferrer" title="View source on GitHub" aria-label="View source on GitHub">
+    <span class="tip-wrap" data-tip="Background color">
+      <input id="bgPicker" class="swatch" type="color" value="#ffffff" aria-label="Pick background color">
+    </span>
+    <a id="ghLink" class="iconbtn iconbtn-gh" href="https://github.com/MichalAFerber/markdown-web-viewer" target="_blank" rel="noopener noreferrer" data-tip="View on GitHub" aria-label="View source on GitHub">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
     </a>
   </nav>
@@ -225,14 +242,17 @@
     <div class="empty-inner">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
       <p class="empty-title">Drop a Markdown file to view</p>
-      <p class="empty-sub">Drag &amp; drop anywhere, paste, or tap to open. Any text file works.</p>
+      <p class="empty-sub">Drag &amp; drop anywhere, paste, or tap to open. Accepts .md, .markdown, .mdx, .txt, .rst, .adoc.</p>
     </div>
   </section>
   <article id="content" class="markdown-body" hidden></article>
 </main>
 
-<footer class="footer">
+<footer class="footer" id="footer">
   <p>&copy; 2026 | Created with &#10084;&#65039; by <a href="https://michalferber.dev" target="_blank" rel="noopener noreferrer">Michal Ferber</a>, aka <a href="https://techguywithabeard.com" target="_blank" rel="noopener noreferrer">TechGuyWithABeard</a></p>
+  <button id="footerClose" class="footer-close" type="button" data-tip="Hide footer" aria-label="Hide footer">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  </button>
 </footer>
 
 <div id="dropOverlay" class="drop-overlay" aria-hidden="true">
@@ -243,7 +263,7 @@
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<input id="fileInput" type="file" accept=".md,.markdown,.mdown,.mkd,.mkdn,.mdx,.txt,.text,.log,.json,.yml,.yaml,.csv,text/*" hidden>
+<input id="fileInput" type="file" accept=".md,.markdown,.mdx,.txt,.rst,.adoc" hidden>
 
 <script>/*! marked v12.0.2 | MIT License | https://github.com/markedjs/marked */
 /**
@@ -268,12 +288,17 @@
   var overlay   = doc.getElementById("dropOverlay");
   var toastEl   = doc.getElementById("toast");
   var docTitle  = doc.getElementById("docTitle");
-  var hoverZone = doc.getElementById("hoverZone");
   var bgPicker  = doc.getElementById("bgPicker");
   var themeColor= doc.getElementById("themeColor");
+  var footerEl  = doc.getElementById("footer");
   var rawText   = "";
   var toastTimer = null;
-  var BASE_TITLE = "MyKK Markdown Viewer";
+  var BASE_TITLE = "[epub, md, html, pdf, data] Viewer";
+
+  // Accepted Markdown-family file types (other file types are handled elsewhere).
+  var MD_EXT = ["md", "markdown", "mdx", "txt", "rst", "adoc"];
+  function extOf(name){ var m = /\.([a-z0-9]+)$/i.exec(name || ""); return m ? m[1].toLowerCase() : ""; }
+  function isAccepted(name){ return MD_EXT.indexOf(extOf(name)) !== -1; }
 
   if (window.marked && typeof marked.setOptions === "function") {
     marked.setOptions({ gfm: true, breaks: false });
@@ -283,7 +308,7 @@
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 1900);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2200);
   }
 
   function render(text, title){
@@ -301,7 +326,8 @@
     docTitle.textContent = title || "";
     doc.title = title ? title + " — " + BASE_TITLE : BASE_TITLE;
     body.classList.add("viewing");
-    body.classList.remove("peek");
+    body.classList.remove("header-hidden");
+    lastY = 0;
     window.scrollTo(0, 0);
   }
 
@@ -312,13 +338,18 @@
     empty.hidden = false;
     docTitle.textContent = "";
     doc.title = BASE_TITLE;
-    body.classList.remove("viewing", "peek");
+    body.classList.remove("viewing", "header-hidden");
   }
 
   function readFile(file){
     if (!file) return;
+    if (!isAccepted(file.name)){
+      var e = extOf(file.name);
+      toast("Unsupported file type" + (e ? ": ." + e : ""));
+      return;
+    }
     var reader = new FileReader();
-    reader.onload  = function(e){ render(String(e.target.result || ""), file.name); };
+    reader.onload  = function(ev){ render(String(ev.target.result || ""), file.name); };
     reader.onerror = function(){ toast("Could not read that file"); };
     reader.readAsText(file);
   }
@@ -331,31 +362,24 @@
     fileInput.value = "";
   });
 
-  // "+" : clear the screen, then open the file dialog
-  doc.getElementById("btnNew").addEventListener("click", function(){
-    clearAll();
-    openDialog();
-  });
-
-  // Copy the raw Markdown source
+  // Copy the raw source
   doc.getElementById("btnCopy").addEventListener("click", function(){
     if (!rawText){ toast("Nothing to copy yet"); return; }
     if (navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(rawText).then(
-        function(){ toast("Markdown copied"); },
+        function(){ toast("Copied"); },
         function(){ fallbackCopy(rawText); }
       );
     } else {
       fallbackCopy(rawText);
     }
   });
-
   function fallbackCopy(text){
     var ta = doc.createElement("textarea");
     ta.value = text; ta.setAttribute("readonly", "");
     ta.style.position = "fixed"; ta.style.opacity = "0";
     doc.body.appendChild(ta); ta.select();
-    try { doc.execCommand("copy"); toast("Markdown copied"); }
+    try { doc.execCommand("copy"); toast("Copied"); }
     catch (err){ toast("Copy not supported"); }
     doc.body.removeChild(ta);
   }
@@ -368,11 +392,28 @@
     if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openDialog(); }
   });
 
-  // Reveal/peek the hidden header by tapping the top strip (touch); desktop uses CSS :hover.
-  hoverZone.addEventListener("click", function(){ body.classList.toggle("peek"); });
-  content.addEventListener("click", function(){ body.classList.remove("peek"); });
+  // Footer close (session)
+  doc.getElementById("footerClose").addEventListener("click", function(){ footerEl.hidden = true; });
 
-  // ---------- Background color (chosen by the user, remembered in a cookie) ----------
+  // ---------- Header auto-hide: hide on scroll-down, show on scroll-up or after 5s ----------
+  var lastY = 0, headerTimer = null, ticking = false;
+  function onScroll(){
+    ticking = false;
+    if (!body.classList.contains("viewing")) return;
+    var y = window.pageYOffset || root.scrollTop || 0;
+    if (y <= 8){ body.classList.remove("header-hidden"); lastY = y; return; }
+    var dy = y - lastY;
+    if (dy > 4) body.classList.add("header-hidden");          // scrolling down
+    else if (dy < -4) body.classList.remove("header-hidden"); // scrolling up
+    lastY = y;
+    clearTimeout(headerTimer);
+    headerTimer = setTimeout(function(){ body.classList.remove("header-hidden"); }, 5000);
+  }
+  window.addEventListener("scroll", function(){
+    if (!ticking){ ticking = true; requestAnimationFrame(onScroll); }
+  }, { passive: true });
+
+  // ---------- Background color (remembered in a cookie, with a localStorage fallback) ----------
   function setCookie(name, val){
     doc.cookie = name + "=" + encodeURIComponent(val) + "; max-age=31536000; path=/; SameSite=Lax";
   }
@@ -392,12 +433,10 @@
     return "rgb(" + Math.round(a.r+(b.r-a.r)*t) + "," + Math.round(a.g+(b.g-a.g)*t) + "," + Math.round(a.b+(b.b-a.b)*t) + ")";
   }
   function rgbStr(c){ return "rgb(" + c.r + "," + c.g + "," + c.b + ")"; }
-
   function applyColor(hex){
     if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) hex = "#ffffff";
     var bg = hexToRgb(hex);
-    // Pick black or white text by whichever contrasts better (crossover ~0.179).
-    var lightText = luminance(bg) <= 0.179;          // dark background -> light text
+    var lightText = luminance(bg) <= 0.179;
     var text = lightText ? { r:240, g:243, b:246 } : { r:31, g:35, b:40 };
     var accentHex = lightText ? "#8b93ff" : "#4f46e5";
     var ac = hexToRgb(accentHex);
@@ -421,18 +460,13 @@
     s.colorScheme = lightText ? "dark" : "light";
     themeColor.setAttribute("content", hex);
   }
-
   function isHex6(v){ return /^#([0-9a-f]{6})$/i.test(v || ""); }
-  function saveColor(val){
-    setCookie("mykk-bg", val);                                  // primary
-    try { localStorage.setItem("mykk-bg", val); } catch (e) {}  // fallback (e.g. file://)
-  }
+  function saveColor(val){ setCookie("mykk-bg", val); try { localStorage.setItem("mykk-bg", val); } catch (e) {} }
   function loadColor(){
     var v = getCookie("mykk-bg");
     if (!isHex6(v)) { try { v = localStorage.getItem("mykk-bg"); } catch (e) { v = null; } }
     return isHex6(v) ? v : "#ffffff";
   }
-
   var saved = loadColor();
   bgPicker.value = saved;
   applyColor(saved);

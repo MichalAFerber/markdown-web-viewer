@@ -15,17 +15,18 @@ runs locally in your browser.
   text file on the page to render it. You can also **paste** text directly.
 - 🏷️ **Filename in the header** — when you open or drop a file, its name shows
   in the top-left.
-- ➕ **New** (`+`) — clears the screen and opens a file picker.
-- 📋 **Copy** — copies the raw Markdown source to your clipboard.
+- 📋 **Copy** — copies the raw source to your clipboard.
 - 🗑️ **Clear** — empties the view.
+- ✅ **Validated on open** — accepts `.md`, `.markdown`, `.mdx`, `.txt`, `.rst`,
+  `.adoc`; anything else is rejected with a notice.
 - 🎨 **Pick any background color** — a color swatch in the header lets you choose
   any background. Text, borders, and code blocks automatically adapt for
   contrast. Your choice is **remembered** — saved to a cookie, with a
   `localStorage` fallback so even a downloaded `file://` copy remembers it.
   Starts on white.
-- 🫥 **Distraction-free** — once a file is loaded the header slides away; move
-  your mouse to the **top of the window** (or tap the top edge on mobile) to
-  bring it back.
+- 🫥 **Distraction-free** — once a file is loaded the header hides when you
+  scroll down and returns when you scroll up (or after ~5s idle); the footer has
+  a **×** to dismiss it too.
 - 📱 **Mobile-first** & responsive, with safe-area support for notched phones.
 - 🔒 **Safe by default** — output is sanitized with DOMPurify, so a malicious
   file can't run scripts. Your files never leave your device.
