@@ -37,6 +37,7 @@
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   html,body{margin:0;padding:0;background:var(--bg)}
+  html,body{overflow-x:clip}   /* never let off-screen decorations (flyout panel, skip link) create a horizontal scrollbar */
   body{
     color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
@@ -129,21 +130,28 @@
     box-shadow:0 6px 22px var(--shadow);
   }
   body.viewing.header-hidden .topbar{transform:translateY(-115%); box-shadow:none}
-  /* content starts at the very top; the fixed header overlays it when shown (unobstructed first paint) */
+  /* collapsed header -> a thick, tappable line over the content (the topbar covers it when shown) */
+  .hover-zone{display:none}
+  body.viewing .hover-zone{display:block; position:fixed; top:0; left:0; right:0; height:22px; z-index:35; cursor:pointer}
+  body.viewing.header-hidden .hover-zone::before{content:""; position:absolute; top:0; left:0; right:0; height:7px; background:var(--accent); box-shadow:0 1px 6px var(--shadow)}
+  body.viewing.header-hidden .hover-zone::after{content:""; position:absolute; top:1.5px; left:50%; transform:translateX(-50%); width:46px; height:4px; border-radius:2px; background:var(--accent-contrast); opacity:.7}
 
   /* ---------- Main ---------- */
   main{flex:1 1 auto; width:100%; display:flex; flex-direction:column}
 
-  /* Full-screen drop area (empty state) */
-  .empty{flex:1 1 auto; display:flex; padding:.75rem; cursor:pointer; color:var(--muted)}
+  /* Empty state: a compact, centered dashed drop card (matches the other viewers). */
+  .empty{
+    flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:2rem 1.25rem; cursor:pointer; color:var(--muted);
+  }
   .empty-inner{
-    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem;
-    border:2px dashed var(--border); border-radius:16px; text-align:center; padding:1.5rem;
+    max-width:30rem; width:100%; display:flex; flex-direction:column; align-items:center; gap:.35rem;
+    border:2px dashed var(--border); border-radius:16px; padding:2.25rem 1.5rem;
     transition:border-color .15s ease, background .15s ease;
   }
   .empty:hover .empty-inner{border-color:var(--accent); background:var(--overlay)}
-  .empty svg{width:54px;height:54px;stroke:var(--accent);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:.4rem}
-  .empty-title{margin:0;font-size:1.15rem;font-weight:650;color:var(--text)}
+  .empty svg{width:46px;height:46px;stroke:var(--accent);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:.4rem}
+  .empty-title{margin:0;font-size:1.1rem;font-weight:650;color:var(--text)}
   .empty-sub{margin:0;font-size:.9rem;max-width:24rem}
 
   .markdown-body{width:100%; max-width:54rem; margin:0 auto; padding:1.25rem 1.1rem 2.5rem}
@@ -279,6 +287,7 @@
     </a>
   </nav>
 </header>
+<div class="hover-zone" id="hoverZone" aria-hidden="true"></div>
 
 <main id="main">
   <section id="empty" class="empty" role="button" tabindex="0" aria-label="Open a file">
@@ -382,14 +391,10 @@
     empty.hidden = true;
     docTitle.textContent = title || BASE_TITLE;
     doc.title = title ? title + " — " + BASE_TITLE : BASE_TITLE;
-    topbar.style.transition = "none";        // hide instantly -> unobstructed first paint
     body.classList.add("viewing");
-    body.classList.add("header-hidden");
-    void topbar.offsetHeight;                // reflow so the hidden state paints with no slide
-    topbar.style.transition = "";
     lastY = 0;
     window.scrollTo(0, 0);
-    showHeaderSoon();                        // reveal after ~5s (or sooner on scroll-up)
+    revealHeader();                          // header visible on open, collapses to the handle after 3s
   }
 
   function clearAll(){
@@ -464,22 +469,37 @@
   navBackdrop.addEventListener("click", function(){ setNav(false); });
   doc.addEventListener("keydown", function(e){ if (e.key === "Escape") setNav(false); });
 
-  // ---------- Header auto-hide: hide on scroll-down, show on scroll-up or after 5s ----------
+  // ---------- Header: while viewing, auto-hides after 3s (collapses to a thick handle); ----------
+  // ---------- hover / touch / scroll-up brings it back. ----------
   var lastY = 0, headerTimer = null, ticking = false;
-  function showHeaderSoon(){ clearTimeout(headerTimer); headerTimer = setTimeout(function(){ body.classList.remove("header-hidden"); }, 5000); }
+  function showHeader(){ body.classList.remove("header-hidden"); }
+  function hideHeader(){ if (body.classList.contains("viewing")) body.classList.add("header-hidden"); }
+  function armIdleHide(){ clearTimeout(headerTimer); headerTimer = setTimeout(hideHeader, 3000); }
+  function revealHeader(){ showHeader(); armIdleHide(); }
+  function showHeaderSoon(){ revealHeader(); }   // (compat) show now, then auto-hide after 3s
   function onScroll(){
     ticking = false;
     if (!body.classList.contains("viewing")) return;
     var y = window.pageYOffset || root.scrollTop || 0;
     var dy = y - lastY;
     lastY = y;
-    if (dy > 4) body.classList.add("header-hidden");          // scrolling down
-    else if (dy < -4) body.classList.remove("header-hidden"); // scrolling up
-    showHeaderSoon();
+    if (dy > 4) hideHeader();          // scrolling down -> collapse to the handle
+    else if (dy < -4) revealHeader();  // scrolling up   -> reveal, then auto-hide after 3s
   }
   window.addEventListener("scroll", function(){
     if (!ticking){ ticking = true; requestAnimationFrame(onScroll); }
   }, { passive: true });
+  // reveal via the top strip / handle (hover, tap, click); keep it up while the pointer is on the header
+  var hoverZone = doc.getElementById("hoverZone");
+  if (hoverZone){
+    hoverZone.addEventListener("mouseenter", revealHeader);
+    hoverZone.addEventListener("click", revealHeader);
+    hoverZone.addEventListener("touchstart", function(){ revealHeader(); }, { passive:true });
+  }
+  if (topbar){
+    topbar.addEventListener("mouseenter", function(){ showHeader(); clearTimeout(headerTimer); });
+    topbar.addEventListener("mouseleave", function(){ armIdleHide(); });
+  }
 
   // ---------- Background color (remembered in a cookie, with a localStorage fallback) ----------
   function setCookie(name, val){
