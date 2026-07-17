@@ -1,0 +1,18 @@
+{
+  "name": "Markdown Viewer",
+  "short_name": "Markdown Viewer",
+  "description": "A fast, single-file Markdown & text viewer. Drag & drop a file to render it.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
