@@ -1,0 +1,13 @@
+# Markdown Viewer
+
+> A fast, single-file Markdown & text viewer. Drag & drop a file to render it.
+
+The viewer is one self-contained HTML file (no build step) and works offline. Files never leave the visitor's device — no uploads, no accounts, no server-side processing.
+
+## Links
+
+- [Open the viewer](https://markdown-viewer.us/)
+- [GitHub](https://github.com/MichalAFerber/markdown-web-viewer): Source (single index.html)
+- [File Viewer family hub](https://file-viewer.us/): All viewers in the family
+- [Privacy Policy](https://file-viewer.us/privacy.html)
+- [Terms of Use](https://file-viewer.us/terms.html)
